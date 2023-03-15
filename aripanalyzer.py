@@ -8,7 +8,7 @@ class Ipanalyzer:
         self.cidr = ipcidr_lt[1]
         self.masc_bin = self.cidr_to_bin(self.cidr)
         self.masc_dec = self.cidr_to_dec(self.cidr)
-        self.hosts_subnets = self.get_nhosts_nsubnets(self.cidr)
+        self.get_nhosts_nsubnets()
     
     def show(self):
         print('--'*10)
@@ -16,6 +16,7 @@ class Ipanalyzer:
         print(f'CIDR: {self.cidr}')
         print(f'masc bin: {self.masc_bin}')
         print(f'masc dec: {self.masc_dec}')
+        print(f'Number of possible nets: {self.n_nets}')
         print(f'Number of possible hosts: {self.n_hosts}')
         print(f'Has subnets: {self.has_subnet}')
         print(f'Number of possible subnets: {self.n_subnets}')
@@ -39,12 +40,20 @@ class Ipanalyzer:
         masc_dec = masc_dec[0:-1]
         return masc_dec
     
-    def get_nhosts_nsubnets(self, cidr):
-        self.has_subnet = bool(int(cidr)%8)
-        masc_withdout_pts = self.cidr_to_bin(cidr, pts=False)
+    def get_nhosts_nsubnets(self):
+        self.has_subnet = bool(int(self.cidr)%8)
+        masc_withdout_pts = self.cidr_to_bin(self.cidr, pts=False)
+        self.n_nets = 2**(int(self.cidr))
         self.n_hosts = self.bin_worker.Bin_to_int('1'*masc_withdout_pts.count('0')) + 1
-        self.n_subnets = int(256*(256/self.n_hosts))
-        if not self.has_subnet: self.n_subnets = None
+        if self.has_subnet:
+            if int(self.cidr)==32: x=0
+            elif int(self.cidr)<8:x=int(self.cidr)
+            elif int(self.cidr)<16:x=int(self.cidr)-8
+            elif int(self.cidr)<24:int(self.cidr)-16
+            elif int(self.cidr)<32:int(self.cidr)-24
+            self.n_subnets = 2**x
+        else:
+            self.n_subnets = None
 
 def main():
     ipv4 = input('\nIPV4 and CIDR: ')
